@@ -49,7 +49,7 @@ SpawnHint: "<color=yellow><b>╔════════════════
 
 ## Требования
 
-- Exiled API (v8+)
+- Exiled API 
 - Сервер SCP:SL
 
 ---
