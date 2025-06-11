@@ -1,11 +1,9 @@
-﻿using Exiled.API.Enums;
+using Exiled.API.Enums;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
-using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace Scp343
@@ -39,15 +37,18 @@ namespace Scp343
 
             Timing.CallDelayed(2f, () =>
             {
-                var players = Player.List.Where(p => p.Role == cfg.SpawnRole && p.IsAlive).ToList();
+                var players = Player.List
+                    .Where(p => p.Role == RoleTypeId.ClassD && p.IsAlive && !p.IsScp)
+                    .ToList();
+
                 if (players.Count < cfg.MinPlayers)
                     return;
 
                 if (UnityEngine.Random.value > cfg.SpawnChance)
                     return;
 
-                var chosen = players[UnityEngine.Random.Range(0, players.Count)];
-                MakeScp343(chosen);
+                var selected = players[UnityEngine.Random.Range(0, players.Count)];
+                MakeScp343(selected);
             });
         }
 
@@ -55,24 +56,28 @@ namespace Scp343
         {
             var cfg = Scp343Plugin.Instance.Config;
             Scp343Player = player;
-            player.CustomInfo = "scp343";
-            player.ClearInventory();
+            player.Role.Set(RoleTypeId.ClassD, RoleSpawnFlags.None);
 
-            for (int i = 0; i < cfg.MedkitCount; i++)
-                player.AddItem(ItemType.Medkit);
+            Timing.CallDelayed(0.5f, () =>
+            {
+                player.CustomInfo = "SCP-343";
+                player.ClearInventory();
 
-            player.IsBypassModeEnabled = cfg.EnableBypass;
-            player.IsGodModeEnabled = cfg.EnableGodMode;
+                for (int i = 0; i < cfg.MedkitCount; i++)
+                    player.AddItem(ItemType.Medkit);
 
-            string hint = cfg.SpawnHint;
-            player.ShowHint(hint, 10f);
-            player.SendConsoleMessage(hint, "ё");
+                player.IsBypassModeEnabled = cfg.EnableBypass;
+                player.IsGodModeEnabled = cfg.EnableGodMode;
+
+                string hint = cfg.SpawnHint;
+                player.ShowHint(hint, 10f);
+                player.SendConsoleMessage(hint, "yellow");
+            });
         }
 
         private static void OnPickingUpItem(PickingUpItemEventArgs ev)
         {
             var cfg = Scp343Plugin.Instance.Config;
-
             if (Scp343Player == null || ev.Player != Scp343Player)
                 return;
 
@@ -102,11 +107,11 @@ namespace Scp343
         {
             if (IsScp343(ev.Player) && ev.Item.Type == ItemType.Medkit)
             {
-                MEC.Timing.CallDelayed(0.2f, () =>
+                Timing.CallDelayed(0.2f, () =>
                 {
                     ev.Player.AddItem(ItemType.Medkit);
                     ev.Player.ShowHint("<color=#FFD700>Ты всегда получаешь новую аптечку!</color>", 2f);
-                    ev.Player.SendConsoleMessage("<color=#FFD700>Ты всегда получаешь новую аптечку!</color>", "ё");
+                    ev.Player.SendConsoleMessage("<color=#FFD700>Ты всегда получаешь новую аптечку!</color>", "yellow");
                 });
             }
         }
