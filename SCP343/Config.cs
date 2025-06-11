@@ -25,7 +25,7 @@ namespace Scp343
         [Description("Количество аптечек при спавне SCP-343.")]
         public int MedkitCount { get; set; } = 8;
 
-        [Description("Выдавать ли обход режиму (noclip) SCP-343?")]
+        [Description("Выдавать ли ByPass SCP-343?")]
         public bool EnableBypass { get; set; } = true;
 
         [Description("Выдавать ли SCP-343 бессмертие?")]
