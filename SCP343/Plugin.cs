@@ -1,4 +1,4 @@
-﻿using Exiled.API.Features;
+using Exiled.API.Features;
 using System;
 
 namespace Scp343
@@ -7,7 +7,7 @@ namespace Scp343
     {
         public override string Name => "SCP-343";
         public override string Author => "zazarick";
-        public override Version Version => new Version(1, 2, 0);
+        public override Version Version => new Version(1, 3, 0);
         public override string Prefix => "scp343";
         public static Scp343Plugin Instance;
 
