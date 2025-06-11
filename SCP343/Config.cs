@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using Exiled.API.Interfaces;
 using PlayerRoles;
 using Exiled.API.Features.Items;
@@ -38,12 +38,11 @@ namespace Scp343
         public ItemType WeaponConvertTo { get; set; } = ItemType.SCP500;
 
         [Description("Сообщение при спавне SCP-343")]
-        public string SpawnHint { get; set; } = "<color=yellow><b>╔══════════════════════════════════════════════╗\n" +
-            "    Ты — <color=#FFD700>SCP-343 (БОГ)</color>!\n\n" +
-            "  — Все предметы, которые ты подберёшь, <color=#00ff00>становятся аптечками</color>.\n" +
-            "  — Всё оружие, которое ты подберёшь, <color=#ff6666>превращается в SCP-500</color>.\n" +
-            "  — При спавне ты получаешь <color=#00bfff>8 аптечек</color>, <color=#FFA500>bypass</color> и <color=#FFA500>godmode</color>.\n" +
-            "  — CustomInfo: <color=#FFD700>scp343</color>\n" +
-            "╚══════════════════════════════════════════════╝</b></color>";
+        public string SpawnHint { get; set; } =
+            "<color=yellow><b>SCP-343 (БОГ)</b></color>\n" +
+            "<color=grey>Все предметы, которые ты подбираешь, становятся аптечками.</color>\n" +
+            "<color=grey>Всё оружие превращается в SCP-500.</color>\n" +
+            "<color=#00bfff>Ты получаешь 8 аптечек, bypass и godmode при спавне.</color>\n" +
+            "<color=yellow>CustomInfo: scp343</color>";
     }
 }
