@@ -100,7 +100,6 @@ namespace Scp343
 
         private static void OnUsedItem(UsedItemEventArgs ev)
         {
-            // Бесконечные аптечки для SCP-343: после использования сразу добавляется новая
             if (IsScp343(ev.Player) && ev.Item.Type == ItemType.Medkit)
             {
                 MEC.Timing.CallDelayed(0.2f, () =>
