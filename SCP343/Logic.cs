@@ -5,12 +5,21 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using System.Linq;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Scp343
 {
     public static class Scp343Logic
     {
         public static Player Scp343Player { get; private set; } = null;
+
+        private static readonly ItemType[] ScpItems = new[]
+        {
+            ItemType.SCP018, ItemType.SCP207, ItemType.SCP268, ItemType.SCP500, ItemType.SCP1576,
+            ItemType.SCP1853, ItemType.SCP2176, ItemType.SCP244a, ItemType.SCP244b, ItemType.SCP330,
+            ItemType.GunSCP127, ItemType.GunSCP127, ItemType.MicroHID
+        };
 
         public static void RegisterEvents()
         {
@@ -37,11 +46,15 @@ namespace Scp343
 
             Timing.CallDelayed(2f, () =>
             {
+                var allPlayersCount = Player.List.Count();
+                if (allPlayersCount < cfg.MinPlayers)
+                    return;
+
                 var players = Player.List
                     .Where(p => p.Role == RoleTypeId.ClassD && p.IsAlive && !p.IsScp)
                     .ToList();
 
-                if (players.Count < cfg.MinPlayers)
+                if (players.Count == 0)
                     return;
 
                 if (UnityEngine.Random.value > cfg.SpawnChance)
@@ -55,31 +68,47 @@ namespace Scp343
         public static void MakeScp343(Player player)
         {
             var cfg = Scp343Plugin.Instance.Config;
-            Scp343Player = player;
+            Scp343Logic.Scp343Player = player;
             player.Role.Set(RoleTypeId.ClassD, RoleSpawnFlags.None);
 
             Timing.CallDelayed(0.5f, () =>
             {
+                var dCells = Room.List.Where(r => r.Type == RoomType.LczClassDSpawn).ToList();
+                if (dCells.Count > 0)
+                {
+                    var room = dCells[UnityEngine.Random.Range(0, dCells.Count)];
+                    player.Teleport(room.Position + Vector3.up * 1f);
+                }
+
                 player.CustomInfo = "SCP-343";
                 player.ClearInventory();
 
-                for (int i = 0; i < cfg.MedkitCount; i++)
+                int medCount = cfg.MedkitCount;
+                for (int i = 0; i < medCount; i++)
                     player.AddItem(ItemType.Medkit);
 
                 player.IsBypassModeEnabled = cfg.EnableBypass;
                 player.IsGodModeEnabled = cfg.EnableGodMode;
 
-                string hint = cfg.SpawnHint;
-                player.ShowHint(hint, 10f);
-                player.SendConsoleMessage(hint, "yellow");
+                player.ShowHint(cfg.SpawnHint, 10f);
+                player.SendConsoleMessage(cfg.SpawnHint, "yellow");
             });
         }
 
         private static void OnPickingUpItem(PickingUpItemEventArgs ev)
         {
             var cfg = Scp343Plugin.Instance.Config;
-            if (Scp343Player == null || ev.Player != Scp343Player)
+            if (Scp343Player == null)
                 return;
+            if (ev.Player != Scp343Player)
+                return;
+
+            if (ScpItems.Contains(ev.Pickup.Type))
+            {
+                ev.IsAllowed = false;
+                ev.Player.ShowHint(cfg.ScpItemBlockHint, 2f);
+                return;
+            }
 
             var itemType = ev.Pickup.Type;
             var category = itemType.GetCategory();
@@ -89,6 +118,11 @@ namespace Scp343
             {
                 foreach (var item in ev.Player.Items.ToList())
                 {
+                    if (ScpItems.Contains(item.Type))
+                    {
+                        ev.Player.RemoveItem(item);
+                        continue;
+                    }
                     if (isWeapon && item.Type.GetCategory() == ItemCategory.Firearm)
                     {
                         ev.Player.RemoveItem(item);
@@ -105,20 +139,23 @@ namespace Scp343
 
         private static void OnUsedItem(UsedItemEventArgs ev)
         {
-            if (IsScp343(ev.Player) && ev.Item.Type == ItemType.Medkit)
+            var cfg = Scp343Plugin.Instance.Config;
+            if (!IsScp343(ev.Player)) return;
+
+            if (ev.Item.Type == ItemType.Medkit)
             {
                 Timing.CallDelayed(0.2f, () =>
                 {
                     ev.Player.AddItem(ItemType.Medkit);
-                    ev.Player.ShowHint("<color=#FFD700>Ты всегда получаешь новую аптечку!</color>", 2f);
-                    ev.Player.SendConsoleMessage("<color=#FFD700>Ты всегда получаешь новую аптечку!</color>", "yellow");
+                    ev.Player.ShowHint(cfg.MedkitHint, 2f);
+                    ev.Player.SendConsoleMessage(cfg.MedkitHint, "yellow");
                 });
             }
         }
 
         private static void OnChangingRole(Exiled.Events.EventArgs.Player.ChangingRoleEventArgs ev)
         {
-            if (Scp343Player != null && ev.Player == Scp343Player && ev.NewRole != Scp343Plugin.Instance.Config.SpawnRole)
+            if (Scp343Player != null && ev.Player == Scp343Player && ev.NewRole != RoleTypeId.ClassD)
             {
                 Scp343Player = null;
             }
